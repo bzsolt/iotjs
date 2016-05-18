@@ -5,7 +5,9 @@ dist: trusty
 sudo: required
 
 before_install:
+  - tools/apt-get-install-deps.sh
   - deps/jerry/tools/apt-get-install-deps.sh
+  - deps/jerry/tools/apt-get-install-qemu-arm.sh
 
 install:
 
@@ -16,3 +18,4 @@ env:
   - OPTS="--buildtype=release"
   - OPTS="--jerry-lto"
   - OPTS="--no-snapshot"
+  - OPTS="--target-arch=arm --target-board=rpi2"

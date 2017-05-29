@@ -4,28 +4,28 @@ The following shows fs module APIs available for each platform.
 
 |  | Linux<br/>(Ubuntu) | Raspbian<br/>(Raspberry Pi) | Nuttx<br/>(STM32F4-Discovery) |
 | :---: | :---: | :---: | :---: |
-| fs.close | O | O | O |
-| fs.closeSync | O | O | O |
-| fs.open | O | O | O |
-| fs.openSync | O | O | O |
-| fs.read | O | O | O |
-| fs.readSync | O | O | O |
-| fs.readDir | O | O | X |
-| fs.readDirSync | O | O | X |
-| fs.readFile | O | O | O |
-| fs.readFileSync | O | O | O |
-| fs.rename | O | O | O |
-| fs.renameSync | O | O | O |
-| fs.stat | O | O | O |
-| fs.statSync | O | O | O |
-| fs.fstat | O | O | O |
-| fs.fstatSync | O | O | O |
-| fs.write | O | O | O |
-| fs.writeSync | O | O | O |
-| fs.writeFile | O | O | O |
-| fs.writeFileSync | O | O | O |
-| fs.unlink | O | O | O |
-| fs.unlinkSync | O | O | O |
+| fs.close | 🗹 | 🗹 | 🗹 |
+| fs.closeSync | 🗹 | 🗹 | 🗹 |
+| fs.open | 🗹 | 🗹 | 🗹 |
+| fs.openSync | 🗹 | 🗹 | 🗹 |
+| fs.read | 🗹 | 🗹 | 🗹 |
+| fs.readSync | 🗹 | 🗹 | 🗹 |
+| fs.readDir | 🗹 | 🗹 | ☐ |
+| fs.readDirSync | 🗹 | 🗹 | ☐ |
+| fs.readFile | 🗹 | 🗹 | 🗹 |
+| fs.readFileSync | 🗹 | 🗹 | 🗹 |
+| fs.rename | 🗹 | 🗹 | 🗹 |
+| fs.renameSync | 🗹 | 🗹 | 🗹 |
+| fs.stat | 🗹 | 🗹 | 🗹 |
+| fs.statSync | 🗹 | 🗹 | 🗹 |
+| fs.fstat | 🗹 | 🗹 | 🗹 |
+| fs.fstatSync | 🗹 | 🗹 | 🗹 |
+| fs.write | 🗹 | 🗹 | 🗹 |
+| fs.writeSync | 🗹 | 🗹 | 🗹 |
+| fs.writeFile | 🗹 | 🗹 | 🗹 |
+| fs.writeFileSync | 🗹 | 🗹 | 🗹 |
+| fs.unlink | 🗹 | 🗹 | 🗹 |
+| fs.unlinkSync | 🗹 | 🗹 | 🗹 |
 
 ※ On `nuttx` path should be passed with a form of **absolute path**.
 

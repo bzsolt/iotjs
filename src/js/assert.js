@@ -43,6 +43,7 @@ function AssertionError(options) {
   this.expected = options.expected;
   this.operator = options.operator;
   if (options.message) {
+    console.log('__message');
     this.message = options.message;
   } else {
     this.message = getMessage(this);

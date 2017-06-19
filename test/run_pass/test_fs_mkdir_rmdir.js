@@ -44,8 +44,11 @@ function unlink(path) {
     unlink(sub1);
     unlink(sub2);
 
-    fs.rmdir(root, function() {
-      assert.equal(fs.existsSync(root), false);
+    fs.rmdir(root, function(err) {
+      if (err) {
+        throw err;
+      }
+      assert.equal(fs.existsSync(root), false, "Zsolti");
     });
 
     var root2 = process.cwd() + "/resources/test_dir2";
@@ -54,8 +57,11 @@ function unlink(path) {
       assert.equal(err, null);
       assert.equal(fs.existsSync(root2), true);
 
-      fs.rmdir(root2, function(){
-        assert.equal(fs.existsSync(root2), false);
+      fs.rmdir(root2, function(err){
+        if (err) {
+          throw err;
+        }
+        assert.equal(fs.existsSync(root2), false, "-a-");
       });
 
       // Try to create a folder in a read-only directory.
@@ -65,15 +71,25 @@ function unlink(path) {
         var dirname = root + "/permission_test";
         try {
           fs.mkdirSync(dirname);
-          assert.assert(false);
+          assert.assert(false, "béka");
         } catch (e) {
           assert.equal(e instanceof Error, true);
-          assert.equal(e instanceof assert.AssertionError, false);
+          console.log('first');
+          assert.equal(e instanceof assert.AssertionError, false, "foo");
+          console.log('second');
         }
 
-        assert.equal(fs.existsSync(dirname), false);
-        fs.rmdir(root, function() {
-          assert.equal(fs.existsSync(root), false);
+        console.log('third');
+        assert.equal(fs.existsSync(dirname), false, "bar");
+        console.log('fourth');
+        fs.rmdir(root, function(err) {
+          if (err) {
+            throw err;
+          }
+
+          console.log('fifth');
+          assert.equal(fs.existsSync(root), false, "baz");
+          console.log('sixth');
         });
       });
     });

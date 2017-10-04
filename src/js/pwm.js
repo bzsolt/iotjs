@@ -14,7 +14,6 @@
  */
 
 var util = require('util');
-var pwm = process.binding(process.binding.pwm);
 
 
 function Pwm() {

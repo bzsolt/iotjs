@@ -14,4 +14,4 @@
  */
 
 
-module.exports = process.binding(process.binding.constants);
+module.exports = native;

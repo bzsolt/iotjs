@@ -138,13 +138,13 @@ typedef struct {
   const char* name;
   const void* code;
   const size_t length;
-} iotjs_js_module;
+} iotjs_js_module_t;
 
-extern const iotjs_js_module natives[];
+extern const iotjs_js_module_t js_modules[];
 '''
 
 NATIVE_STRUCT_C = '''
-const iotjs_js_module natives[] = {{
+const iotjs_js_module_t js_modules[] = {{
 {MODULES}
 }};
 '''

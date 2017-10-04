@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-var adc = process.binding(process.binding.adc).Adc;
-
 function Adc() {
   if (!(this instanceof Adc)) {
     return new Adc();

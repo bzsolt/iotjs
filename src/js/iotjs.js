@@ -15,52 +15,50 @@
 
 this.global = this;
 
-function Native(id) {
+function Module(id) {
   this.id = id;
-  this.filename = id + '.js';
   this.exports = {};
 }
 
 
-Native.cache = {};
+Module.cache = {};
 
 
-Native.require = function(id) {
+Module.require = function(id) {
   if (id == 'native') {
-    return Native;
+    return Module;
   }
 
-  if (Native.cache[id]) {
-    return Native.cache[id].exports;
+  if (Module.cache[id]) {
+    return Module.cache[id].exports;
   }
 
-  var nativeMod = new Native(id);
+  var module = new Module(id);
 
-  Native.cache[id] = nativeMod;
-  nativeMod.compile();
+  Module.cache[id] = module;
+  module.compile();
 
-  return nativeMod.exports;
+  return module.exports;
 }
 
 
-Native.prototype.compile = function() {
+Module.prototype.compile = function() {
   // process.native_sources has a list of pointers to
-  // the source strings defined in 'iotjs_js.h', not
-  // source strings.
+  // the source strings defined in 'iotjs_js.h'
 
-  var fn = process.compileNativePtr(this.id);
-  fn(this.exports, Native.require, this);
+  var fn = process.compileJsSource(this.id);
+  fn(this.exports, Module.require, this, fn.nativeBuiltinImpl);
 }
 
-global.console = Native.require('console');
-global.Buffer = Native.require('buffer');
+global.console = Module.require('console');
+global.Buffer = Module.require('buffer');
 
 (function() {
   var timers = undefined;
 
   var _timeoutHandler = function(mode) {
     if (timers == undefined) {
-      timers = Native.require('timers');
+      timers = Module.require('timers');
     }
     return timers[mode].apply(this, Array.prototype.slice.call(arguments, 1));
   }
@@ -71,7 +69,7 @@ global.Buffer = Native.require('buffer');
   global.clearInterval = _timeoutHandler.bind(this, 'clearInterval');
 })();
 
-var EventEmitter = Native.require('events').EventEmitter;
+var EventEmitter = Module.require('events').EventEmitter;
 
 EventEmitter.call(process);
 
@@ -166,5 +164,6 @@ process.exit = function(code) {
 }
 
 
-var module = Native.require('module');
+var module = Module.require('module');
+console.log('kiscica');
 module.runMain();

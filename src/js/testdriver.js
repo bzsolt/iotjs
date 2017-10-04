@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
-module.exports = process.binding(process.binding.testdriver);
+module.exports = native;

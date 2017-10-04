@@ -14,7 +14,6 @@
  */
 
 var util = require('util');
-var HTTPParser = process.binding(process.binding.httpparser).HTTPParser;
 var IncomingMessage = require('http_incoming').IncomingMessage;
 
 

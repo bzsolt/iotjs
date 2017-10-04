@@ -14,7 +14,6 @@
  */
 
 var EventEmitter = require('events').EventEmitter;
-var gpio = process.binding(process.binding.gpio);
 var util = require('util');
 
 

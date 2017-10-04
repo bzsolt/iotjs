@@ -1,0 +1,187 @@
+{
+  "platforms": {
+    "darwin": ["assert", "buffer", "console", "dns", "events", "fs", "http", "module", "net", "stream", "testdriver", "timers"],
+    "linux": ["assert", "buffer", "console", "constants", "dgram", "dns", "events", "fs", "http", "httpparser", "module", "net", "process", "stream", "testdriver", "timers", "util"],
+    "nuttx": ["adc", "assert", "buffer", "console", "dgram", "dns", "events", "fs", "gpio", "http", "i2c", "module", "net", "pwm", "spi", "stm32f4dis", "stream", "testdriver", "timers", "uart"],
+    "tizen": ["adc", "assert", "ble", "buffer", "console", "dgram", "dns", "events", "fs", "gpio", "http", "https", "i2c", "module", "net", "pwm", "spi", "stream", "testdriver", "timers", "uart"],
+    "tizenrt": ["adc", "assert", "buffer", "console", "dgram", "dns", "events", "fs", "gpio", "http", "i2c", "module", "net", "pwm", "spi", "stream", "testdriver", "timers", "uart"]
+  },
+  "modules": {
+    "adc": {
+      "linux": {
+        "native_files": [
+          "platform/linux/iotjs_module_adc-linux.c"
+        ]
+      },
+      "undefined": {
+        "native_files": [
+          "iotjs_module_adc.c"
+        ]
+      },
+      "native_files": [
+         "iotjs_module_adc.c"
+      ],
+      "require": ["assert"],
+      "js_file": "adc.js",
+      "init": "InitAdc"
+    },
+    "assert": {
+      "js_file": "assert.js"
+    },
+    "blehcisocket": {
+      "native_files": [
+        "iotjs_module_blehcisocket.c"
+      ]
+    },
+    "buffer": {
+      "native_files": [
+        "iotjs_module_buffer.c"
+      ],
+      "js_file": "buffer.js",
+      "init": "InitBuffer"
+    },
+    "console": {
+      "native_files": [
+        "iotjs_module_console.c"
+      ],
+      "js_file": "console.js",
+      "init": "InitConsole"
+    },
+    "constants": {
+      "native_files": [
+        "iotjs_module_constants.c"
+      ],
+      "js_file": "constants.js",
+      "init": "InitConstants"
+    },
+    "dgram": {
+      "js_file": "dgram.js"
+    },
+    "dns": {
+      "native_files": [
+        "iotjs_module_dns.c"
+      ],
+      "js_file": "dns.js",
+      "init": "InitDns"
+    },
+    "events": {
+      "js_file": "events.js"
+    },
+    "fs": {
+      "native_files": [
+        "iotjs_module_fs.c"
+      ],
+      "js_file": "fs.js",
+      "init": "InitFs"
+    },
+    "gpio": {
+      "native_files": [
+        "iotjs_module_gpio.c"
+      ],
+      "js_file": "gpio.js",
+      "init": "InitGpio"
+    },
+    "http": {
+      "js_file": "http.js"
+    },
+    "http_client": {
+      "js_file": "http_client.js"
+    },
+    "http_common": {
+      "js_file": "http_common.js"
+    },
+    "http_incoming": {
+      "js_file": "http_incoming.js"
+    },
+    "http_outgoing": {
+      "js_file": "http_outgoing.js"
+    },
+    "httpparser": {
+      "native_files": [
+        "iotjs_module_httpparser.c"
+      ],
+      "init": "InitHttpparser"
+    },
+    "http_server": {
+      "js_file": "http_server.js"
+    },
+    "i2c": {
+      "native_files": [
+        "iotjs_module_i2c.c"
+      ],
+      "js_file": "i2c.js",
+      "init": "InitI2c"
+    },
+    "net": {
+      "js_file": "net.js"
+    },
+    "process": {
+      "native_files": [
+        "iotjs_module_process.c"
+      ],
+      "init": "InitProcess"
+    },
+    "pwm": {
+      "native_files": [
+        "iotjs_module_pwm.c"
+      ],
+      "js_file": "pwm.js",
+      "init": "InitPwm"
+    },
+    "spi": {
+      "native_files": [
+        "iotjs_module_spi.c"
+      ],
+      "js_file": "spi.js",
+      "init": "InitSpi"
+    },
+    "stream": {
+      "js_file": "stream.js"
+    },
+    "stream_duplex": {
+      "js_file": "stream_duplex.js"
+    },
+    "stream_readable": {
+      "js_file": "stream_readable.js"
+    },
+    "stream_writable": {
+      "js_file": "stream_writable.js"
+    },
+    "tcp": {
+      "native_files": [
+        "iotjs_module_tcp.c"
+      ],
+      "init": "InitTcp"
+    },
+    "testdriver": {
+      "native_files": [
+        "iotjs_module_testdriver.c"
+      ],
+      "js_file": "testdriver.js",
+      "init": "InitTestdriver"
+    },
+    "timers": {
+      "native_files": [
+        "iotjs_module_timer.c"
+      ],
+      "js_file": "timers.js",
+      "init": "InitTimer"
+    },
+    "uart": {
+      "native_files": [
+        "iotjs_module_uart.c"
+      ],
+      "js_file": "uart.js",
+      "init": "InitUart"
+    },
+    "udp": {
+      "native_files": [
+        "iotjs_module_udp.c"
+      ],
+      "init": "InitUdp"
+    },
+    "util": {
+      "js_file": "util.js"
+    }
+  }
+}

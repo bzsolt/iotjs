@@ -16,8 +16,6 @@
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
-var UDP = process.binding(process.binding.udp);
-
 var BIND_STATE_UNBOUND = 0;
 var BIND_STATE_BINDING = 1;
 var BIND_STATE_BOUND = 2;
@@ -40,7 +38,7 @@ function lookup4(address, callback) {
 
 function newHandle(type) {
   if (type == 'udp4') {
-    var handle = new UDP();
+    var handle = new udp();
     handle.lookup = lookup4;
     return handle;
   }
@@ -67,7 +65,7 @@ function Socket(type, listener) {
   this.type = type;
   this.fd = null; // compatibility hack
 
-  // If true - UV_UDP_REUSEADDR flag will be set
+  // If true - UV_udp_REUSEADDR flag will be set
   this._reuseAddr = options && options.reuseAddr;
 
   if (util.isFunction(listener))

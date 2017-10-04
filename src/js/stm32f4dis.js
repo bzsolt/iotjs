@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
-module.exports = process.binding(process.binding.stm32f4dis);
+module.exports = stm32f4dis;

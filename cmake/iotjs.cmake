@@ -14,6 +14,8 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+include(${ROOT_DIR}/cmake/JSONParser.cmake)
+
 set(IOTJS_SOURCE_DIR ${ROOT_DIR}/src)
 
 function(find_value RESULT VALUE VALUE_TRUE VALUE_FALSE)
@@ -47,47 +49,6 @@ if(NOT "${TARGET_BOARD}" STREQUAL "None")
   list(APPEND IOTJS_PLATFORM_SRC ${IOTJS_BOARD_SRC})
 endif()
 
-# Run js/native module analyzer
-if(ENABLE_MINIMAL)
-    set(MODULE_ANALYZER_ARGS --iotjs-minimal-profile)
-endif()
-
-execute_process(
-  COMMAND python ${ROOT_DIR}/tools/module_analyzer.py
-          --mode cmake-dump
-          --target-os ${TARGET_OS}
-          --iotjs-include-module "${IOTJS_INCLUDE_MODULE}"
-          --iotjs-exclude-module "${IOTJS_EXCLUDE_MODULE}"
-          ${MODULE_ANALYZER_ARGS}
-  RESULT_VARIABLE MODULE_ANALYZER_RETURN_CODE
-  ERROR_VARIABLE MODULE_ANALYZER_OUTPUT_ERR
-  OUTPUT_VARIABLE MODULE_ANALYZER_OUTPUT
-)
-
-if(MODULE_ANALYZER_RETURN_CODE)
-  message(FATAL_ERROR
-    "Error during module analyzer execution (${MODULE_ANALYZER_RETURN_CODE}): "
-    "${MODULE_ANALYZER_OUTPUT}"
-    "${MODULE_ANALYZER_OUTPUT_ERR}")
-endif()
-
-if(VERBOSE)
-  message("Module analyzer:\n${MODULE_ANALYZER_OUTPUT}")
-endif()
-
-function(get_variable_value OUTPUT_VAR VAR_NAME STRING_DATA)
-  string(REGEX MATCHALL "${VAR_NAME}=[a-zA-Z;_0-9-]+" LINE "${STRING_DATA}")
-  string(REPLACE "${VAR_NAME}=" "" VAR_VALUE "${LINE}")
-  string(STRIP "${VAR_VALUE}" VAR_VALUE)
-  separate_arguments(VAR_VALUE)
-  set(${OUTPUT_VAR} ${VAR_VALUE} PARENT_SCOPE)
-endfunction(get_variable_value)
-
-get_variable_value(IOTJS_NATIVE_MODULES
-  "IOTJS_NATIVE_MODULES" "${MODULE_ANALYZER_OUTPUT}")
-get_variable_value(IOTJS_JS_MODULES
-  "IOTJS_JS_MODULES" "${MODULE_ANALYZER_OUTPUT}")
-
 # Run js2c
 set(JS2C_RUN_MODE "release")
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
@@ -99,6 +60,125 @@ if(ENABLE_SNAPSHOT)
   set(IOTJS_CFLAGS ${IOTJS_CFLAGS} -DENABLE_SNAPSHOT)
 endif()
 
+
+
+
+
+
+
+
+
+
+
+
+# ======================================================================
+
+# Module Configuration - listup all possible native C modules
+function(getListOfVarsStartingWith _prefix _varResult)
+    set(_moduleNames)
+    get_cmake_property(_vars VARIABLES)
+    string(REPLACE "." "\\." _prefix ${_prefix})
+    foreach(_var ${_vars})
+      string(REGEX MATCH "(^|;)${_prefix}([A-Za-z0-9_]+)\\.[A-Za-z0-9_.]*" _matchedVar "${_var}")
+      if(_matchedVar)
+        list(APPEND _moduleNames ${CMAKE_MATCH_2})
+      endif()
+    endforeach()
+    list(REMOVE_DUPLICATES _moduleNames)
+    set(${_varResult} ${_moduleNames} PARENT_SCOPE)
+endfunction()
+
+if(NOT MODULE_DESCRIPTOR_FILE)
+  set(MODULE_DESCRIPTOR_FILE "${ROOT_DIR}/src/modules/modules.json")
+endif()
+
+file(READ ${MODULE_DESCRIPTOR_FILE} IOTJS_MODULES_JSON_FILE)
+sbeParseJson(IOTJS_MODULES_JSON IOTJS_MODULES_JSON_FILE)
+
+getListOfVarsStartingWith("IOTJS_MODULES_JSON.modules." IOTJS_MODULES)
+
+# Enable all possible module for the given platform
+foreach(var ${IOTJS_MODULES_JSON.platforms.${IOTJS_SYSTEM_OS}})
+  string(TOUPPER ${IOTJS_MODULES_JSON.platforms.${IOTJS_SYSTEM_OS}_${var}} MODULE)
+  set(ENABLE_MODULE_${MODULE} ON CACHE BOOL "ON/OFF")
+endforeach()
+
+foreach(var ${IOTJS_MODULES})
+  string(TOUPPER ${var} MODULE)
+  set(ENABLE_MODULE_${MODULE} OFF CACHE BOOL "ON/OFF")
+endforeach()
+
+set(IOTJS_JS_MODULES)
+set(IOTJS_MODULE_SRC)
+set(IOTJS_MODULES_ENABLED)
+
+message("IoT.js module configuration")
+foreach(module ${IOTJS_MODULES})
+  string(TOUPPER ${module} MODULE)
+  if(${ENABLE_MODULE_${MODULE}})
+    set(MODULE_JS_FILE ${IOTJS_MODULES_JSON.modules.${module}.js_file})
+    if(NOT "${MODULE_JS_FILE}" STREQUAL "")
+      if(EXISTS "${IOTJS_SOURCE_DIR}/js/${MODULE_JS_FILE}")
+        list(APPEND IOTJS_JS_MODULES "${module}")
+      endif()
+    endif()
+
+    if(NOT "${IOTJS_MODULES_JSON.modules.${module}.native_files}" STREQUAL "")
+      list(APPEND IOTJS_MODULES_ENABLED "${MODULE}")
+    endif()
+
+    foreach(item ${IOTJS_MODULES_JSON.modules.${module}.native_files})
+      set(MODULE_C_FILE ${IOTJS_MODULES_JSON.modules.${module}.native_files_${item}})
+      set(MODULE_C_FILE "${IOTJS_SOURCE_DIR}/modules/${MODULE_C_FILE}")
+      if(EXISTS "${MODULE_C_FILE}")
+        list(APPEND IOTJS_MODULE_SRC ${MODULE_C_FILE})
+      endif()
+    endforeach()
+  endif()
+endforeach()
+
+list(APPEND IOTJS_JS_MODULES "iotjs")
+list(APPEND IOTJS_JS_MODULES "module")
+list(LENGTH IOTJS_MODULES_ENABLED IOTJS_MODULE_COUNT)
+
+set(IOTJS_MODULE_INL_H
+"#define MODULE_COUNT ${IOTJS_MODULE_COUNT}
+static iotjs_module_t modules[MODULE_COUNT];
+")
+
+foreach(module ${IOTJS_MODULES_ENABLED})
+  string(TOLOWER ${module} lowercase_module)
+  set(IOTJS_MODULE_INL_H
+  "${IOTJS_MODULE_INL_H}
+iotjs_jval_t ${IOTJS_MODULES_JSON.modules.${lowercase_module}.init}();")
+endforeach()
+
+set(IOTJS_MODULE_INL_H
+"${IOTJS_MODULE_INL_H}
+
+void iotjs_module_list_init() {")
+
+set(index 0)
+foreach(module ${IOTJS_MODULES_ENABLED})
+  string(TOLOWER ${module} lowercase_module)
+  set(IOTJS_MODULE_INL_H
+  "${IOTJS_MODULE_INL_H}
+  modules[${index}].name = \"${lowercase_module}\";
+  modules[${index}].jmodule = *iotjs_jval_get_undefined();
+  modules[${index}].fn_register = ${IOTJS_MODULES_JSON.modules.${lowercase_module}.init};")
+  math(EXPR index "${index} + 1")
+endforeach()
+
+set(IOTJS_MODULE_INL_H
+"${IOTJS_MODULE_INL_H}
+}")
+
+file(WRITE ${IOTJS_SOURCE_DIR}/iotjs_module_inl.h "${IOTJS_MODULE_INL_H}")
+
+sbeClearJson(IOTJS_MODULES_JSON)
+
+# ======================================================================
+
 add_custom_command(
   OUTPUT ${IOTJS_SOURCE_DIR}/iotjs_js.c ${IOTJS_SOURCE_DIR}/iotjs_js.h
   COMMAND python ${ROOT_DIR}/tools/js2c.py
@@ -109,94 +189,6 @@ add_custom_command(
           jerry
           ${IOTJS_SOURCE_DIR}/js/*.js
 )
-
-# Module Configuration - listup all possible native C modules
-set(IOTJS_MODULES_ENABLED)
-set(IOTJS_MODULES_DISABLED)
-# List all modules and mark them as disabled by default
-file(GLOB IOTJS_MODULES_ALL_SRC ${IOTJS_SOURCE_DIR}/modules/*.c)
-foreach(module ${IOTJS_MODULES_ALL_SRC})
-  ## iotjs_module_adc.c -> ADC
-  get_filename_component(IOTJS_MODULENAME ${module} NAME_WE)
-  string(SUBSTRING ${IOTJS_MODULENAME} 13 -1 IOTJS_MODULENAME)
-  string(TOUPPER ${IOTJS_MODULENAME} IOTJS_MODULENAME)
-  list(APPEND IOTJS_MODULES_DISABLED ${IOTJS_MODULENAME})
-endforeach()
-
-# Module Configuration - enable only selected modules and add board support
-set(IOTJS_PLATFORM_SUPPORT)
-set(IOTJS_BOARD_SUPPORT)
-set(IOTJS_MODULES_SRC)
-set(PLATFORM_SRC
-  ${IOTJS_SOURCE_DIR}/platform/${PLATFORM_DESCRIPTOR}/iotjs_module)
-foreach(module ${IOTJS_NATIVE_MODULES})
-  string(TOUPPER ${module} MODULE)
-  # check if there is a native file for the module
-  set(BASE_MODULE_SRC ${IOTJS_SOURCE_DIR}/modules/iotjs_module_${module}.c)
-  if(EXISTS "${BASE_MODULE_SRC}")
-    list(APPEND IOTJS_MODULE_SRC ${BASE_MODULE_SRC})
-  endif()
-
-  # first, check if there is the module in <os>/<board>
-  set(ADD_MODULE_RESULT FALSE)
-  if(NOT "${TARGET_BOARD}" STREQUAL "None")
-    set(PLATFORM_MODULE_SRC ${PLATFORM_BOARD_DIR}/iotjs_module_${module})
-    set(PLATFORM_MODULE_SRC
-        ${PLATFORM_MODULE_SRC}-${IOTJS_SYSTEM_OS}-${TARGET_BOARD}.c)
-    if(EXISTS "${PLATFORM_MODULE_SRC}")
-      list(APPEND IOTJS_MODULE_SRC ${PLATFORM_MODULE_SRC})
-      list(APPEND IOTJS_BOARD_SUPPORT ${MODULE})
-      set(${ADD_MODULE_RESULT} TRUE)
-    else()
-      set(${ADD_MODULE_RESULT} FALSE)
-    endif()
-  endif()
-
-  # if the module is not in <os>/<board>, look in <os>
-  if(NOT ${ADD_MODULE_RESULT})
-    set(PLATFORM_MODULE_SRC
-        ${PLATFORM_OS_DIR}/iotjs_module_${module}-${IOTJS_SYSTEM_OS}.c)
-    if(EXISTS "${PLATFORM_MODULE_SRC}")
-      list(APPEND IOTJS_MODULE_SRC ${PLATFORM_MODULE_SRC})
-      list(APPEND IOTJS_PLATFORM_SUPPORT ${MODULE})
-    endif()
-  endif()
-
-  list(APPEND IOTJS_MODULES_ENABLED ${MODULE})
-  list(REMOVE_ITEM IOTJS_MODULES_DISABLED ${MODULE})
-endforeach()
-# Build the module enable defines and print out the module configurations
-message("Native module configuration:")
-set(IOTJS_MODULES_ALL ${IOTJS_MODULES_ENABLED} ${IOTJS_MODULES_DISABLED})
-list(SORT IOTJS_MODULES_ALL)
-foreach(module ${IOTJS_MODULES_ALL})
-  find_value(MODULE_ENABLED "${module}" 1 0 ${IOTJS_MODULES_ENABLED})
-  list(APPEND IOTJS_CFLAGS "-DENABLE_MODULE_${module}=${MODULE_ENABLED}")
-
-  if(MODULE_ENABLED)
-    find_value(PLATFORM_SUPPORT "${module}" "found" "NOT found"
-               ${IOTJS_PLATFORM_SUPPORT})
-    if(DEFINED TARGET_BOARD)
-      find_value(BOARD_SUPPORT "${module}" "found" "NOT found"
-        ${IOTJS_BOARD_SUPPORT})
-      set(BOARD_SUPPORT_STR "[Board support: ${BOARD_SUPPORT}]")
-    else()
-      set(BOARD_SUPPORT_STR "")
-    endif()
-
-    message(STATUS "${module}: ON "
-            "[Platform support: ${PLATFORM_SUPPORT}]"
-            "${BOARD_SUPPORT_STR}")
-  else()
-    message(STATUS "${module}: OFF")
-  endif()
-endforeach()
-
-# List the enabled js modules
-message("Enabled JS modules:")
-foreach(module ${IOTJS_JS_MODULES})
-  message(STATUS "${module}")
-endforeach()
 
 # Print out some configs
 message("IoT.js configured with:")

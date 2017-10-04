@@ -44,7 +44,6 @@
  */
 
 var util = require('util');
-var i2c = process.binding(process.binding.i2c);
 
 function I2C() {
   if (!(this instanceof I2C)) {

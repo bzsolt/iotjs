@@ -23,10 +23,8 @@
 JHANDLER_FUNCTION(Binding) {
   DJHANDLER_CHECK_ARGS(1, number);
 
-  ModuleKind module_kind = (ModuleKind)JHANDLER_GET_ARG(0, number);
-
-  const iotjs_jval_t jmodule =
-      *iotjs_module_initialize_if_necessary(module_kind);
+  const iotjs_jval_t jmodule = *iotjs_jval_get_undefined ();
+//      iotjs_module_initialize_if_necessary(module_kind);
 
   iotjs_jhandler_return_jval(jhandler, jmodule);
 }
@@ -34,7 +32,7 @@ JHANDLER_FUNCTION(Binding) {
 
 static iotjs_jval_t WrapEval(const char* name, size_t name_len,
                              const char* source, size_t length, bool* throws) {
-  static const char* args = "exports, require, module";
+  static const char* args = "exports, require, module, native";
   jerry_value_t res =
       jerry_parse_function((const jerry_char_t*)name, name_len,
                            (const jerry_char_t*)args, strlen(args),
@@ -112,31 +110,35 @@ JHANDLER_FUNCTION(DebuggerSourceCompile) {
 }
 
 
-JHANDLER_FUNCTION(CompileNativePtr) {
+JHANDLER_FUNCTION(CompileJsSource) {
   DJHANDLER_CHECK_ARGS(1, string);
 
   iotjs_string_t id = JHANDLER_GET_ARG(0, string);
   const char* name = iotjs_string_data(&id);
 
   int i = 0;
-  while (natives[i].name != NULL) {
-    if (!strcmp(natives[i].name, name)) {
+  while (js_modules[i].name != NULL) {
+    if (!strcmp(js_modules[i].name, name)) {
       break;
     }
 
     i++;
   }
 
-  if (natives[i].name != NULL) {
+  iotjs_jval_t native_module_jval = iotjs_module_get(name);
+
+  if (js_modules[i].name != NULL) {
     bool throws;
 #ifdef ENABLE_SNAPSHOT
-    iotjs_jval_t jres = iotjs_jhelper_exec_snapshot(natives[i].code,
-                                                    natives[i].length, &throws);
+    iotjs_jval_t jres = iotjs_jhelper_exec_snapshot(js_modules[i].code,
+                                                    js_modules[i].length, &throws);
 #else
     iotjs_jval_t jres =
-        WrapEval(name, iotjs_string_size(&id), (const char*)natives[i].code,
-                 natives[i].length, &throws);
+        WrapEval(name, iotjs_string_size(&id), (const char*)js_modules[i].code,
+                 js_modules[i].length, &throws);
 #endif
+
+    iotjs_jval_set_property_jval(jres, "nativeBuiltinImpl", native_module_jval);
 
     if (!throws) {
       iotjs_jhandler_return_jval(jhandler, jres);
@@ -210,8 +212,8 @@ JHANDLER_FUNCTION(DoExit) {
 
 
 void SetNativeSources(iotjs_jval_t native_sources) {
-  for (int i = 0; natives[i].name; i++) {
-    iotjs_jval_set_property_jval(native_sources, natives[i].name,
+  for (int i = 0; js_modules[i].name; i++) {
+    iotjs_jval_set_property_jval(native_sources, js_modules[i].name,
                                  *iotjs_jval_get_boolean(true));
   }
 }
@@ -288,7 +290,7 @@ iotjs_jval_t InitProcess() {
   iotjs_jval_set_method(process, IOTJS_MAGIC_STRING_BINDING, Binding);
   iotjs_jval_set_method(process, IOTJS_MAGIC_STRING_COMPILE, Compile);
   iotjs_jval_set_method(process, IOTJS_MAGIC_STRING_COMPILENATIVEPTR,
-                        CompileNativePtr);
+                        CompileJsSource);
   iotjs_jval_set_method(process, IOTJS_MAGIC_STRING_READSOURCE, ReadSource);
   iotjs_jval_set_method(process, IOTJS_MAGIC_STRING_CWD, Cwd);
   iotjs_jval_set_method(process, IOTJS_MAGIC_STRING_CHDIR, Chdir);
@@ -333,13 +335,6 @@ iotjs_jval_t InitProcess() {
   // Binding module id.
   iotjs_jval_t jbinding =
       iotjs_jval_get_property(process, IOTJS_MAGIC_STRING_BINDING);
-
-#define ENUMDEF_MODULE_LIST(upper, Camel, lower) \
-  iotjs_jval_set_property_number(jbinding, #lower, MODULE_##upper);
-
-  MAP_MODULE_LIST(ENUMDEF_MODULE_LIST)
-
-#undef ENUMDEF_MODULE_LIST
 
   jerry_release_value(wait_source_val);
   jerry_release_value(jbinding);

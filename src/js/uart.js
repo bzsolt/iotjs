@@ -15,7 +15,6 @@
 
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
-var uart = process.binding(process.binding.uart);
 
 // VALIDATION ARRAYS
 var BAUDRATE = [0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400

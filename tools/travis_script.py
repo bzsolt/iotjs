@@ -60,7 +60,7 @@ def run_docker():
     ex.check_run_cmd('docker', ['run', '-dit', '--privileged',
                      '--name', DOCKER_NAME, '-v',
                      '%s:%s' % (TRAVIS_BUILD_PATH, DOCKER_IOTJS_PATH),
-                     'iotjs/ubuntu:0.4'])
+                     'borbezs/iotjs:0.1'])
 
 def exec_docker(cwd, cmd):
     exec_cmd = 'cd %s && ' % cwd + ' '.join(cmd)

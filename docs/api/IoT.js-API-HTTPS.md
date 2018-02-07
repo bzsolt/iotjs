@@ -4,9 +4,17 @@
 
 |  | Linux<br/>(Ubuntu) | Raspbian<br/>(Raspberry Pi) | Nuttx<br/>(STM32F4-Discovery) | TizenRT<br/>(Artik053) | Tizen<br/>(Artik 10) |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| https.request  | X | X | X | X | O |
-| https.get  | X | X | X | X | O |
+| https.request  | 1 | 1 | 0 | 0 | 1 |
+| https.get      | 1 | 1 | 0 | 0 | 1 |
 
+##### Legend:
+
+* 0 - unsupported
+* 1 - supported
+
+#### Package prerequisite:
+To use this module you have to provide the `libcurl-dev` virtual package on your system, otherwise
+the build couldn't find certain header files.
 
 # Https
 

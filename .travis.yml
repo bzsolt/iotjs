@@ -8,7 +8,7 @@ services:
   - docker
 
 before_install:
-  - if [[ "$RUN_DOCKER" == "yes" ]]; then docker pull iotjs/ubuntu:0.4; fi
+  - if [[ "$RUN_DOCKER" == "yes" ]]; then docker pull borbezs/iotjs:0.1; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tools/brew-install-deps.sh; fi
   - if [[ "$OPTS" == "misc" ]]; then tools/apt-get-install-deps.sh; fi
 

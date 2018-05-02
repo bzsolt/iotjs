@@ -23,6 +23,7 @@ except:
 
 import argparse
 import json
+import subprocess
 import sys
 import re
 import os
@@ -418,6 +419,13 @@ if __name__ == '__main__':
     if not options.no_init_submodule:
         print_progress('Initialize submodule')
         init_submodule()
+
+    bashCommand = "uname -s"
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+
+    print('output', output)
+    print('error', error)
 
     build_iotjs(options)
 
